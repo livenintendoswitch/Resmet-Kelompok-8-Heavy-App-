@@ -4,7 +4,7 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "512",
   "memory": "1024",
-  "executionRoleArn": "arn:aws:iam::633630779109:role/GitHubActions-Fargate-Deploy-Role",
+  "executionRoleArn": "arn:aws:iam::633630779109:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS",
   "containerDefinitions": [
     {
       "name": "HeavyWeightApp",
