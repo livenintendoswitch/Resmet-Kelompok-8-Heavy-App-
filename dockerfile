@@ -3,8 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 COPY . .
-RUN node ./bin/sync-db.js
+ENV NODE_ENV=production
+ENV DATABASE_URL="sqlite:///app/database.sqlite"
 RUN npm run build
 EXPOSE 3000
 CMD ["npm", "start"]
-
