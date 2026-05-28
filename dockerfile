@@ -1,9 +1,9 @@
 FROM node:18-alpine
-workdir /app
-COPY package.json ./
-RUN npm install
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 COPY . .
-env DATABASE_URL=sqlite://memory
+ENV DATABASE_URL=sqlite://memory
 RUN npm run build
 EXPOSE 3000
-cmd ["npm", "start"]
+CMD ["npm", "start"]
