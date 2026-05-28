@@ -1,0 +1,31 @@
+{
+  "family": "heavy-app-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::633630779109:role/GitHubActions-Fargate-Deploy-Role",
+  "containerDefinitions": [
+    {
+      "name": "HeavyWeightApp",
+      "image": "633630779109.dkr.ecr.ap-southeast-3.amazonaws.com/resmetkelompok8heavyapp",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/heavy-app-task",
+          "awslogs-region": "ap-southeast-3",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      }
+    }
+  ]
+}
