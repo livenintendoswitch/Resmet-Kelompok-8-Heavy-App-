@@ -18,7 +18,7 @@
       ],
       "secrets":[
         {
-          "name":"jwt-secret",
+          "name":"SECRET",
           "valueFrom":"arn:aws:ssm:ap-southeast-3:633630779109:parameter/heavyapp/jwt-secret"
         }
       ],
