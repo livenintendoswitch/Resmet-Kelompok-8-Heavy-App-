@@ -10,7 +10,7 @@
       "name": "HeavyWeightApp",
       "image": "633630779109.dkr.ecr.ap-southeast-3.amazonaws.com/resmetkelompok8heavyapp",
       "essential": true,
-      "enviroment": [
+      "environment": [
         {
           "name": "NODE_ENV",
           "value": "production"
