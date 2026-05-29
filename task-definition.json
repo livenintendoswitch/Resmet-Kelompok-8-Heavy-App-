@@ -10,6 +10,18 @@
       "name": "HeavyWeightApp",
       "image": "633630779109.dkr.ecr.ap-southeast-3.amazonaws.com/resmetkelompok8heavyapp",
       "essential": true,
+      "enviroment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        }
+      ],
+      "secrets":[
+        {
+          "name":"jwt-secret",
+          "valueFrom":"arn:aws:ssm:ap-southeast-3:633630779109:parameter/heavyapp/jwt-secret"
+        }
+      ],
       "portMappings": [
         {
           "containerPort": 3000,
