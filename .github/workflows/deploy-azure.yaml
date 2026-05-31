@@ -1,0 +1,45 @@
+name: Deploy Heavy App to Azure
+
+on:
+  push:
+    branches:
+      - azure
+
+permissions:
+  id-token: write     
+  contents: read     
+
+jobs:
+  deploy:
+    name: Build and Deploy to Azure
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@latest
+
+    - name: Azure Login via OIDC
+      uses: azure/login@latest
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Login to Azure Container Registry
+      run: az acr login --name ${{ secrets.ACR_NAME }}
+
+    - name: Build and Push Docker image
+      env:
+        IMAGE_TAG: ${{ github.sha }}
+        ACR_LOGIN_SERVER: ${{ secrets.ACR_NAME }}.azurecr.io
+      run: |
+        docker build -t $ACR_LOGIN_SERVER/heavy-app:$IMAGE_TAG .
+        docker push $ACR_LOGIN_SERVER/heavy-app:$IMAGE_TAG
+
+    - name: Deploy to Azure Container Apps
+      uses: azure/container-apps-deploy-action@latest
+      with:
+        appSourcePath: ${{ github.workspace }}
+        resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
+        containerAppName: ${{ secrets.ACA_NAME }}
+        imageToDeploy: ${{ secrets.ACR_NAME }}.azurecr.io/heavy-app:${{ github.sha }}
