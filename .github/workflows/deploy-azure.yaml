@@ -16,10 +16,10 @@ jobs:
 
     steps:
     - name: Checkout Repo
-      uses: actions/checkout@latest
+      uses: actions/checkout@v4
 
     - name: Azure Login via OIDC
-      uses: azure/login@latest
+      uses: azure/login@v2
       with:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -37,7 +37,7 @@ jobs:
         docker push $ACR_LOGIN_SERVER/heavy-app:$IMAGE_TAG
 
     - name: Deploy to Azure Container Apps
-      uses: azure/container-apps-deploy-action@latest
+      uses: azure/container-apps-deploy-action@v3
       with:
         appSourcePath: ${{ github.workspace }}
         resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
