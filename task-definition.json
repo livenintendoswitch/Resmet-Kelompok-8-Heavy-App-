@@ -2,13 +2,13 @@
   "family": "heavy-app-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "cpu": "512",
-  "memory": "1024",
+  "cpu": "1024",
+  "memory": "2048",
   "executionRoleArn": "arn:aws:iam::633630779109:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
       "name": "HeavyWeightApp",
-      "image": "633630779109.dkr.ecr.ap-southeast-3.amazonaws.com/resmetkelompok8heavyapp",
+      "image": "633630779109.dkr.ecr.ap-southeast-3.amazonaws.com/resmetkelompok8heavyapp@latest",
       "essential": true,
       "environment": [
         {
