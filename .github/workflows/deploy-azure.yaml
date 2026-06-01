@@ -25,21 +25,46 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Login to Azure Container Registry
-      run: az acr login --name ${{ secrets.ACR_NAME }}
+    - name: Log in to Azure Container Registry
+      run: az acr login --name benchmarkacrkel8
 
-    - name: Build and Push Docker image
-      env:
-        IMAGE_TAG: ${{ github.sha }}
-        ACR_LOGIN_SERVER: ${{ secrets.ACR_NAME }}.azurecr.io
+    - name: Build and Deploy Backend (light-app-service)
       run: |
-        docker build -t $ACR_LOGIN_SERVER/heavy-app:$IMAGE_TAG .
-        docker push $ACR_LOGIN_SERVER/heavy-app:$IMAGE_TAG
+        ROBOT_ID=$(az identity show --name github-benchmark-robot --resource-group permanent-auth-vault-rg --query id -o tsv)
+        
+        # Native GitHub Runner Compile
+        docker build -t benchmarkacrkel8.azurecr.io/light-app-backend:${{ github.sha }} ./backend
+        
+        # Push to Registry
+        docker push benchmarkacrkel8.azurecr.io/light-app-backend:${{ github.sha }}
+        
+        # Update Container App Code (Preserves Database Environment Variables!)
+        az containerapp update \
+          --name light-app-service \
+          --resource-group benchmark-apps-rg \
+          --image benchmarkacrkel8.azurecr.io/light-app-backend:${{ github.sha }} \
+          --registry-server benchmarkacrkel8.azurecr.io \
+          --registry-identity $ROBOT_ID
 
-    - name: Deploy to Azure Container Apps
-      uses: azure/container-apps-deploy-action@v2
-      with:
-        appSourcePath: ${{ github.workspace }}
-        resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
-        containerAppName: ${{ secrets.ACA_NAME }}
-        imageToDeploy: ${{ secrets.ACR_NAME }}.azurecr.io/heavy-app:${{ github.sha }}
+    - name: Build and Deploy Frontend (light-app-frontend)
+      run: |
+        ROBOT_ID=$(az identity show --name github-benchmark-robot --resource-group permanent-auth-vault-rg --query id -o tsv)
+        
+        # Dynamically fetch the Backend's live URL
+        BACKEND_URL=$(az containerapp show --name light-app-service --resource-group benchmark-apps-rg --query properties.configuration.ingress.fqdn -o tsv)
+        
+        # Native GitHub Runner Compile
+        docker build -t benchmarkacrkel8.azurecr.io/light-app-frontend:${{ github.sha }} ./frontend
+        
+        # Push to Registry
+        docker push benchmarkacrkel8.azurecr.io/light-app-frontend:${{ github.sha }}
+        
+        # Update Container App & Inject Backend URL
+        az containerapp update \
+          --name light-app-frontend \
+          --resource-group benchmark-apps-rg \
+          --image benchmarkacrkel8.azurecr.io/light-app-frontend:${{ github.sha }} \
+          --registry-server benchmarkacrkel8.azurecr.io \
+          --registry-identity $ROBOT_ID \
+          --set-env-vars REACT_APP_API_URL=https://$BACKEND_URL VITE_API_URL=https://$BACKEND_URL
+      wait-for-service-stability: true
