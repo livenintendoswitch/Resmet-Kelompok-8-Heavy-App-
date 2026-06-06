@@ -1,4 +1,18 @@
-stage('Assume Role & Deploy to Fargate') {
+pipeline {
+    agent any
+
+    triggers {
+        githubPush()
+    }
+
+    stages {
+        stage('Checkout Source') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Assume Role & Deploy to Fargate') {
             steps {
                 // 🔒 Securely pull the infrastructure map from the Jenkins vault
                 withCredentials([file(credentialsId: 'aws-deployment-config', variable: 'AWS_CONFIG_FILE')]) {
@@ -25,7 +39,7 @@ stage('Assume Role & Deploy to Fargate') {
                     export AWS_SESSION_TOKEN=\$(echo "\$CREDENTIALS" | jq -r '.SessionToken')
 
                     # 3. Extract the AWS Account ID straight from your configuration's Role ARN string
-                    AWS_ACCOUNT_ID=\$(echo "\text{\${AWS_ROLE_ARN}}" | cut -d':' -f5)
+                    AWS_ACCOUNT_ID=\$(echo "\${AWS_ROLE_ARN}" | cut -d':' -f5)
                     REGISTRY_URL="\${AWS_ACCOUNT_ID}.dkr.ecr.\${AWS_REGION}.amazonaws.com"
 
                     echo "🚀 Logging into Amazon ECR..."
@@ -36,11 +50,11 @@ stage('Assume Role & Deploy to Fargate') {
                     docker build -t \${IMAGE_URI} .
                     docker push \${IMAGE_URI}
 
-                    // 📋 Injecting new Image URI into task-definition.json
+                    echo "📋 Injecting new Image URI into task-definition.json..."
                     jq "(.containerDefinitions[0]).image = \\"\${IMAGE_URI}\\"" ./task-definition.json > updated-task-def.json
 
                     echo "🚀 Registering Task Revision & Updating Fargate Service..."
-                    NEW_TASK_ARN=\$(aws ecs register-task-definition --cli-input-json file://updated-task-def.json --region \text{\${AWS_REGION}} --query 'taskDefinition.taskDefinitionArn' --output text)
+                    NEW_TASK_ARN=\$(aws ecs register-task-definition --cli-input-json file://updated-task-def.json --region \${AWS_REGION} --query 'taskDefinition.taskDefinitionArn' --output text)
                     
                     aws ecs update-service --cluster \${ECS_CLUSTER} --service \${ECS_SERVICE} --task-definition \${NEW_TASK_ARN} --region \${AWS_REGION}
                     
@@ -49,3 +63,12 @@ stage('Assume Role & Deploy to Fargate') {
                 }
             }
         }
+    }
+
+    post {
+        always {
+            // Ensure scratchpads are wiped clean so consecutive benchmarking runs don't conflict
+            sh "rm -f updated-task-def.json"
+        }
+    }
+}
