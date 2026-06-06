@@ -17,6 +17,7 @@ pipeline {
                 // 🔒 Securely pull the infrastructure map from the Jenkins vault
                 withCredentials([file(credentialsId: 'aws-deployment-config', variable: 'AWS_CONFIG_FILE')]) {
                     sh """
+                    #!/bin/bash
                     echo "⚙️ Loading infrastructure configuration from secret file..."
                     
                     # Read the secret file and export every key-value pair directly into this shell block
