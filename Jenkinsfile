@@ -15,13 +15,15 @@ pipeline {
         stage('Assume Role & Deploy to Fargate') {
             steps {
                 // 🔒 Securely pull the infrastructure map from the Jenkins vault
-                withCredentials([file(credentialsId: 'aws-deployment-config', variable: 'AWS_CONFIG_FILE')]) {
+                // FIX: Changed variable from AWS_CONFIG_FILE to INFRA_CONFIG
+                withCredentials([file(credentialsId: 'aws-deployment-config', variable: 'INFRA_CONFIG')]) {
                     sh """
                     echo "⚙️ Loading infrastructure configuration from secret file..."
                     
                     # 🛠️ Universal POSIX dot (.) operator replacing the 'source' command
                     set -a
-                    . \$AWS_CONFIG_FILE
+                    # FIX: Changed variable to match the line above
+                    . \$INFRA_CONFIG
                     set +a
 
                     echo "🔐 Assuming AWS Target Role: \${AWS_ROLE_ARN}..."
