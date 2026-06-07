@@ -43,7 +43,7 @@ pipeline {
                 echo 'Run this exact command on your local Mac terminal to deploy the new code:'
                 echo '========================================================================'
                 
-                echo "az containerapp update --name \${APP_NAME} --resource-group \${RG_NAME} --image \${ACR_NAME}.azurecr.io/\${APP_NAME}:\${GIT_COMMIT}"
+echo "az containerapp update --name ${APP_NAME} --resource-group ${RG_NAME} --image ${ACR_NAME}.azurecr.io/${APP_NAME}:${GIT_COMMIT}"
             }
         }
     }
