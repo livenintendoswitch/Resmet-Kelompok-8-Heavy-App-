@@ -3,7 +3,7 @@ name: Deploy to AWS Fargate
 on:
   push:
     branches:
-      - nothing
+      - next
 
 permissions:
   id-token: write
