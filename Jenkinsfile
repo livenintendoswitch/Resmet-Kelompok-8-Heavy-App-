@@ -6,9 +6,9 @@ pipeline {
     }
 
     environment {
-        ACR_NAME              = 'benchmarkacrkel8'
-        RG_NAME               = 'benchmark-apps-rg'
-        APP_NAME              = 'heavy-app-service'
+        ACR_NAME = 'benchmarkacrkel8'
+        RG_NAME  = 'benchmark-apps-rg'
+        APP_NAME = 'heavy-app-service'
     }
 
     stages {
@@ -23,27 +23,40 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'ACR_CREDENTIALS', passwordVariable: 'ACR_PASSWORD', usernameVariable: 'ACR_USER')]) {
                     sh """
                     echo "🚀 Logging into Azure Container Registry..."
-                    docker login \${ACR_NAME}.azurecr.io -u \${ACR_USER} -p \${ACR_PASSWORD}
+                    
+                    # Force Jenkins to explicitly map the environment variable
+                    REGISTRY="${env.ACR_NAME}.azurecr.io"
+                    CLEAN_USER=\$(echo "\$ACR_USER" | tr -d '\\r\\n ')
+                    
+                    # CRITICAL FIX: Options (-u, --password-stdin) MUST come BEFORE the registry URL!
+                    printf "%s" "\$ACR_PASSWORD" | docker login -u "\$CLEAN_USER" --password-stdin "\$REGISTRY"
 
                     echo "🔨 Packaging and Pushing Docker Image..."
-                    IMAGE_URI="\${ACR_NAME}.azurecr.io/\${APP_NAME}:\${GIT_COMMIT}"
-                    docker build -t \${IMAGE_URI} .
-                    docker push \${IMAGE_URI}
+                    COMMIT_HASH=\$(git rev-parse HEAD | tr -d '\\r\\n ')
+                    IMAGE_URI="\${REGISTRY}/${env.APP_NAME}:\${COMMIT_HASH}"
+                    
+                    docker build -t "\$IMAGE_URI" .
+                    docker push "\$IMAGE_URI"
                     """
                 }
             }
         }
 
-        stage('Manual Deployment Step') {
+        stage('Automated Deployment') {
             steps {
-                // Stripped out the failing Service Principal login
-                echo '========================================================================'
-                echo '✅ BUILD & PUSH SUCCESSFUL!'
-                echo '⚠️ AUTOMATED DEPLOYMENT BLOCKED BY AZURE DIRECTORY PERMISSIONS'
-                echo 'Run this exact command on your local Mac terminal to deploy the new code:'
-                echo '========================================================================'
+                sh """
+                echo "🚀 Triggering Azure Container App Update..."
                 
-                echo "az containerapp update --name ${APP_NAME} --resource-group ${RG_NAME} --image ${ACR_NAME}.azurecr.io/${APP_NAME}:${GIT_COMMIT}"
+                COMMIT_HASH=\$(git rev-parse HEAD | tr -d '\\r\\n ')
+                REGISTRY="${env.ACR_NAME}.azurecr.io"
+                
+                az containerapp update \\
+                    --name "${env.APP_NAME}" \\
+                    --resource-group "${env.RG_NAME}" \\
+                    --image "\${REGISTRY}/${env.APP_NAME}:\${COMMIT_HASH}"
+                    
+                echo "✅ DEPLOYMENT COMPLETE!"
+                """
             }
         }
     }
