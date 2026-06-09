@@ -23,12 +23,9 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'ACR_CREDENTIALS', passwordVariable: 'ACR_PASSWORD', usernameVariable: 'ACR_USER')]) {
                     sh """
                     echo "🚀 Logging into Azure Container Registry..."
-                    
-                    # Force Jenkins to explicitly map the environment variable
                     REGISTRY="${env.ACR_NAME}.azurecr.io"
                     CLEAN_USER=\$(echo "\$ACR_USER" | tr -d '\\r\\n ')
                     
-                    # CRITICAL FIX: Options (-u, --password-stdin) MUST come BEFORE the registry URL!
                     printf "%s" "\$ACR_PASSWORD" | docker login -u "\$CLEAN_USER" --password-stdin "\$REGISTRY"
 
                     echo "🔨 Packaging and Pushing Docker Image..."
@@ -46,10 +43,10 @@ pipeline {
             steps {
                 sh """
                 echo "🚀 Triggering Azure Container App Update..."
-                
                 COMMIT_HASH=\$(git rev-parse HEAD | tr -d '\\r\\n ')
                 REGISTRY="${env.ACR_NAME}.azurecr.io"
                 
+                # The Jenkins VM's newly installed 'az' tool will now handle this seamlessly!
                 az containerapp update \\
                     --name "${env.APP_NAME}" \\
                     --resource-group "${env.RG_NAME}" \\
