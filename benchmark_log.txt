@@ -59,3 +59,4 @@ heavy app normal run 4 - Tue Jun  9 23:36:36 WIB 2026
 heavy app normal run 5 - Tue Jun  9 23:37:43 WIB 2026
 heavy app failed deploy 1 - Tue Jun  9 23:38:50 WIB 2026
 heavy app rollback 1 - Tue Jun  9 23:39:48 WIB 2026
+heavy app failed deploy 2 - Tue Jun  9 23:40:55 WIB 2026
