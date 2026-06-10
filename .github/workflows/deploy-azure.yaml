@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Checkout Repo
-      uses: actions/checkout@v4
+      uses: actions/pasti-gagal-error@v4
 
     - name: Azure Login via OIDC
       uses: azure/login@v2
