@@ -14,7 +14,7 @@ pipeline {
 
         stage('Assume Role & Deploy to Fargate') {
             steps {
-                withCredentials([file(credentialsId: 'aws-deployment-config', variable: 'INFRA_CONFIG')]) {
+                withCredentials([file(credentialsId: 'aws', variable: 'INFRA_CONFIG')]) {
                     sh """
                     echo "⚙️ Loading infrastructure configuration from secret file..."
                     set -a
